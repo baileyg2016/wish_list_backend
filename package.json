@@ -1,0 +1,28 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Server for Extension",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/baileyg2016/wish_list_backend.git"
+  },
+  "author": "Bailey Spell",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/baileyg2016/wish_list_backend/issues"
+  },
+  "homepage": "https://github.com/baileyg2016/wish_list_backend#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.4",
+    "pg": "^8.2.1",
+    "util": "^0.12.3"
+  }
+}
