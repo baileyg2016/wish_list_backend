@@ -6,7 +6,7 @@ const dotenv = require('dotenv');
 const util = require('util');
 const { Client } =  require('pg');
 
-const pool = require('./db');
+// const pool = require('./db');
 
 dotenv.config();
 
@@ -20,7 +20,7 @@ const port = process.env.PORT || 5000;
 app.use(bodyParser.json());
 
 app.get("/", async (req, res, next) => {
-    await pool.query("SELECT * FROM \"Users\"", (err, result) => {
+    await pgClient.query("SELECT * FROM \"Users\"", (err, result) => {
         if (err) {
             console.log(err);
             res.status(400).send(err)
