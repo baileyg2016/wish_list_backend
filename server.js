@@ -8,6 +8,7 @@ const forceSSL = require('express-force-ssl');
 const fs = require('fs');
 var http = require('http');
 const https = require('https');
+const jwt = require('jsonwebtoken');
 const util = require('util');
 const { Client } =  require('pg');
 
@@ -19,17 +20,23 @@ pgClient.connect();
 
 const app = express();
 const port = process.env.PORT || 5000;
-var key = fs.readFileSync('private.key');
+var key = fs.readFileSync('key.pem', 'utf8');
 // var cert = fs.readFileSync('primary.crt' );
-var ca = fs.readFileSync('mydomain.csr' );
+var cert = fs.readFileSync('cert.pem', 'utf8');
 var serverOptions = {
     key: key,
     // cert: cert,
-    ca: ca
+    cert: cert
 };
 
 app.use(bodyParser.json());
-app.use(forceSSL); // for http to go through https (:
+// app.use(forceSSL); // for http to go through https (:
+
+// http.createServer(app).listen(80);
+
+// https.createServer(serverOptions, app).listen(port, () => {
+//     console.log(`Server is running on port ${port}`)
+// });
 
 // perform login credentials
 app.get("/", async (req, res, next) => {
@@ -71,15 +78,11 @@ app.post("/addItem", async (req, res) => {
 });
 
 
-// app.listen(port, () => {
-//     console.log(`Server is running on port: ${port}`);
-// });
-
-http.createServer(app).listen(80);
-
-https.createServer(serverOptions, app).listen(port, () => {
-    console.log(`Server is running on port ${port}`)
+app.listen(port, () => {
+    console.log(`Server is running on port: ${port}`);
 });
+
+
 
 var prettyPrintResponse = response => {
     console.log(util.inspect(response, {colors: true, depth: 4}));
