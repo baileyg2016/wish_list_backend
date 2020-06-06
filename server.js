@@ -89,6 +89,9 @@ app.post("/addItem", async (req, res) => {
         res.status(403).send({ msg: token.message });
     }
     else {
+
+        await pgClient.query(`SELECT doesUserExists`)
+
         await pgClient.query(`SELECT addItem(\'${req.body.user}\'::text, \'${req.body.name}\'::text, \'${req.body.url}\'::text, ${req.body.cost}::money, \'${req.body.size}\'::text, \'${req.body.custom}\'::text);`, (err, result) => {
             if (err) {
                 console.error(err);
