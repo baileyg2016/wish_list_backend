@@ -2,6 +2,7 @@
 
 const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 const dotenv = require('dotenv');
 const express = require('express');
 const forceSSL = require('express-force-ssl');
@@ -30,6 +31,7 @@ var serverOptions = {
 };
 
 app.use(bodyParser.json());
+app.use(cors({origin: 'http://localhost:3000'}));
 // app.use(forceSSL); // for http to go through https (:
 
 // http.createServer(app).listen(80);
@@ -37,6 +39,21 @@ app.use(bodyParser.json());
 // https.createServer(serverOptions, app).listen(port, () => {
 //     console.log(`Server is running on port ${port}`)
 // });
+
+// make the JWT valid for a month
+const signJWT = (payload) => {
+    return jwt.sign({
+            data: payload
+        }, process.env.JWT_PASS, { expiresIn: '30d' }, (err, decode) => {
+            if (err) console.err(err);
+        });
+};
+
+// verify user
+const verifyUser = async (token) => {
+    var decoded_token;
+     await jwt.decode(token, process.env.JWT_PASS, )
+}
 
 // perform login credentials
 app.get("/", async (req, res, next) => {
@@ -52,14 +69,18 @@ app.get("/", async (req, res, next) => {
     });
 });
 
-app.post("/", async (req, res) => {
+app.post("/register", async (req, res) => {
     // bcrypt goes here
-    await pgClient.query(`SELECT adduser('${req.body.firstName}'::text, '${req.bodylastName}'::text, '${req.body.email}'::text, 'testing123'::text);`, (err, result) => {
+    await pgClient.query(`SELECT adduser('${req.body.firstName}'::text, '${req.body.lastName}'::text, '${req.body.email}'::text, '${req.body.password}'::text);`, (err, result) => {
         if (err) {
             console.log(err);
             res.status(400).send(err)
         }
-        res.send(result.rows)
+        // also need to send the jwt here
+        res.status(200).send({
+            jwt: signJWT(req.body.email)
+        });
+
         prettyPrintResponse(result.rows)
     });
 });
