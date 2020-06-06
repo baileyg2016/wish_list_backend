@@ -9,7 +9,8 @@ const forceSSL = require('express-force-ssl');
 const fs = require('fs');
 var http = require('http');
 const https = require('https');
-const jwt = require('jsonwebtoken');
+// const jwt = require('jsonwebtoken');
+const { signJWT, verifyUser } = require('./modules/jwt');
 const util = require('util');
 const { Client } =  require('pg');
 
@@ -40,20 +41,7 @@ app.use(cors({origin: 'http://localhost:3000'}));
 //     console.log(`Server is running on port ${port}`)
 // });
 
-// make the JWT valid for a month
-const signJWT = (payload) => {
-    return jwt.sign({
-            data: payload
-        }, process.env.JWT_PASS, { expiresIn: '30d' }, (err, decode) => {
-            if (err) console.err(err);
-        });
-};
 
-// verify user
-const verifyUser = async (token) => {
-    var decoded_token;
-     await jwt.decode(token, process.env.JWT_PASS, )
-}
 
 // perform login credentials
 app.get("/", async (req, res, next) => {
@@ -69,33 +57,52 @@ app.get("/", async (req, res, next) => {
     });
 });
 
+// register a new user
 app.post("/register", async (req, res) => {
     // bcrypt goes here
     await pgClient.query(`SELECT adduser('${req.body.firstName}'::text, '${req.body.lastName}'::text, '${req.body.email}'::text, '${req.body.password}'::text);`, (err, result) => {
         if (err) {
             console.log(err);
             res.status(400).send(err)
+            return;
         }
         // also need to send the jwt here
+
+        var token = signJWT(req.body.email);
+        
         res.status(200).send({
-            jwt: signJWT(req.body.email)
+            jwt: token
         });
 
-        prettyPrintResponse(result.rows)
+        prettyPrintResponse(result)
     });
 });
 
 app.post("/addItem", async (req, res) => {
-    await pgClient.query(`SELECT addItem(\'${req.body.user}\'::text, \'${req.body.name}\'::text, \'${req.body.url}\'::text, ${req.body.cost}::money, \'${req.body.size}\'::text, \'${req.body.custom}\'::text);`, (err, result) => {
-        if (err) {
-            console.error(err);
-            res.status(500).send(err);
-            return;
-        }
 
-        res.send(result)
-        prettyPrintResponse(result)
-    })
+    var decoded = verifyUser(req.body.email);
+
+    if (decoded.name === 'TokenExpiredError') {
+        res.status(401).send({ msg: token.message });
+    }
+    else if (decoded.name === 'JsonWebTokenError') {
+        res.status(403).send({ msg: token.message });
+    }
+    else {
+        await pgClient.query(`SELECT addItem(\'${req.body.user}\'::text, \'${req.body.name}\'::text, \'${req.body.url}\'::text, ${req.body.cost}::money, \'${req.body.size}\'::text, \'${req.body.custom}\'::text);`, (err, result) => {
+            if (err) {
+                console.error(err);
+                res.status(400).send(err);
+                return;
+            }
+    
+            // make sure that the user is in the db and their token is valid
+            
+    
+            res.status(200).send();
+            prettyPrintResponse(result)
+        })   
+    }
 });
 
 
