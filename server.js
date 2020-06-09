@@ -42,6 +42,21 @@ app.use(cors({origin: 'http://localhost:3000'}));
 // });
 
 
+// const makeQuery = async (query, ...args) {
+//     await pgClient.query(`SELECT ${query}()`, (err, result) => {
+//         if (err) {
+//             console.log(err);
+//             res.status(400).send(err)
+//         }
+//         res.send(result.rows)
+//         prettyPrintResponse(result.rows)
+//     });
+// }
+
+const doesUserExist = async (email) => {
+    return await pgClient.query(`SELECT doesUserExist(\'${email}\')`).then(res => { return res.rows[0].doesuserexist });
+}
+
 
 // perform login credentials
 app.get("/", async (req, res, next) => {
@@ -78,35 +93,129 @@ app.post("/register", async (req, res) => {
     });
 });
 
-app.post("/addItem", async (req, res) => {
+/*
+    Request body: 
+        {
+            jwt: // email/username,
+            name: // name of the item,
+            size: // size of the item,
+            url: // item url,
+            imageURL: //url to the image,
+            cost: // how much the item cost,
+            custom: // any item custumization specifics
+        }
+    the decoded token should have the username/email as the data field
+*/
 
-    var decoded = verifyUser(req.body.email);
+app.post("/addItem", async (req, res) => {
+    var decoded;
+    try {
+        decoded = verifyUser(req.body.token);
+    }
+    catch {
+        res.sendStatus(500);
+        return;
+    }
 
     if (decoded.name === 'TokenExpiredError') {
-        res.status(401).send({ msg: token.message });
+        res.status(401).send({ msg: decoded.message });
     }
     else if (decoded.name === 'JsonWebTokenError') {
-        res.status(403).send({ msg: token.message });
+        res.status(403).send({ msg: decoded.message });
     }
     else {
+        // make sure that the user is in the db and their token is valid
+        if (await doesUserExist(decoded.data)) {
+            pgClient.query(`SELECT addItem(\'${decoded.data}\'::text, \'${req.body.name}\'::text, \'${req.body.url}\'::text, ${req.body.cost}::money, \'${req.body.size}\'::text, \'${req.body.custom}\'::text);`, (err, result) => {
+                if (err) {
+                    console.error(err);
+                    res.status(400).send(err);
+                    return;
+                }
+                
+                res.status(200).send({pk: result.rows[0].additem});
+                prettyPrintResponse(result)
+            });    
+        }
+        else {
+            res.status(403).send({ msg: 'User does not exist' });
+        }
+    }
+});
 
-        await pgClient.query(`SELECT doesUserExists`)
+app.get('/getItems', async (req, res) => {
+    var token = req.headers.authorization;
+    console.log(token)
+    var decoded;
+    try {
+        decoded = verifyUser(token);
+        console.log(decoded)
+    }
+    catch {
+        res.sendStatus(500);
+        return;
+    }
 
-        await pgClient.query(`SELECT addItem(\'${req.body.user}\'::text, \'${req.body.name}\'::text, \'${req.body.url}\'::text, ${req.body.cost}::money, \'${req.body.size}\'::text, \'${req.body.custom}\'::text);`, (err, result) => {
+    if (decoded.name === 'TokenExpiredError') {
+        res.status(401).send({ msg: decoded.message });
+    }
+    else if (decoded.name === 'JsonWebTokenError') {
+        res.status(403).send({ msg: decoded.message });
+    }
+    else {
+        // make sure that the user is in the db and their token is valid
+        if (await doesUserExist(decoded.data)) {
+            pgClient.query(`SELECT
+                                items."pkItem",
+                                items."Name",
+                                items.url,
+                                items."ImageURL",
+                                items."Cost",
+                                items."Size",
+                                items."Custom"
+                            FROM items INNER JOIN users u ON items."UserID" = u."pkUser" WHERE "Email"='${decoded.data}'; `,
+                            (err, result) => {
+                                if (err) {
+                                    console.error(err);
+                                    res.status(400).send(err);
+                                    return;
+                                }
+
+                                res.status(200).send({ items: result.rows });
+                            });
+        }
+        else {
+            res.status(403).send({ msg: "User does not exist" });
+        }
+    }
+});
+
+/*
+    request body = {
+        pkItem: // primary of the item to delete
+    }
+*/
+app.delete("/deleteItem", async (req, res) => {
+    var decoded = verifyUser(req.body.token);
+
+    if (decoded.name === 'TokenExpiredError') {
+        res.status(401).send({ msg: decoded.message });
+    }
+    else if (decoded.name === 'JsonWebTokenError') {
+        res.status(403).send({ msg: decoded.message });
+    }
+    else {
+        await pgClient.query(`SELECT deleteitem(\'${req.body.pkItem}\')`, (err, result) => {
             if (err) {
                 console.error(err);
                 res.status(400).send(err);
                 return;
             }
-    
-            // make sure that the user is in the db and their token is valid
             
-    
-            res.status(200).send();
-            prettyPrintResponse(result)
-        })   
+            prettyPrintResponse(result);
+        });
     }
-});
+})
 
 
 app.listen(port, () => {
