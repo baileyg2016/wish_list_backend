@@ -2,6 +2,7 @@
 
 const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
+const cookie = require('cookie-parser');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const express = require('express');
@@ -58,16 +59,32 @@ const doesUserExist = async (email) => {
 }
 
 
-// perform login credentials
+/* perform login credentials
+    request body = {
+        username: // user's username,
+        password: // user's password
+    }
+*/
+
 app.get("/", async (req, res, next) => {
     // should check for duplicates
 
-    await pgClient.query("SELECT * FROM users", (err, result) => {
+    await pgClient.query(`SELECT checkLoginUser(\'${req.body.username}\', \'${req.body.password}\')`, (err, result) => {
         if (err) {
             console.log(err);
-            res.status(400).send(err)
+            res.status(500).send(err)
         }
-        res.send(result.rows)
+
+        if (result.rows[0]) {
+
+            res.send({
+                jwt: signJWT(req.body.email)
+            })
+        }
+        else {
+            res.status(403).send( { msg: "Username and/or password is incorrect" } );
+        }
+
         prettyPrintResponse(result.rows)
     });
 });
@@ -84,6 +101,8 @@ app.post("/register", async (req, res) => {
         // also need to send the jwt here
 
         var token = signJWT(req.body.email);
+
+        // res.cookie
         
         res.status(200).send({
             jwt: token
@@ -117,8 +136,11 @@ app.post("/addItem", async (req, res) => {
         return;
     }
 
-    if (decoded.name === 'TokenExpiredError') {
-        res.status(401).send({ msg: decoded.message });
+    if (decoded.name === 'TokenExpiredError') { // generate new token
+        var token = signJWT(decoded.data);
+        res.status(200).send({
+            jwt: token
+        });
     }
     else if (decoded.name === 'JsonWebTokenError') {
         res.status(403).send({ msg: decoded.message });
@@ -157,7 +179,10 @@ app.get('/getItems', async (req, res) => {
     }
 
     if (decoded.name === 'TokenExpiredError') {
-        res.status(401).send({ msg: decoded.message });
+        var token = signJWT(decoded.data);
+        res.status(200).send({
+            jwt: token
+        });
     }
     else if (decoded.name === 'JsonWebTokenError') {
         res.status(403).send({ msg: decoded.message });
@@ -199,7 +224,10 @@ app.delete("/deleteItem", async (req, res) => {
     var decoded = verifyUser(req.body.token);
 
     if (decoded.name === 'TokenExpiredError') {
-        res.status(401).send({ msg: decoded.message });
+        var token = signJWT(decoded.data);
+        res.status(200).send({
+            jwt: token
+        });
     }
     else if (decoded.name === 'JsonWebTokenError') {
         res.status(403).send({ msg: decoded.message });
