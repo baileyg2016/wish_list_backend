@@ -178,6 +178,7 @@ app.get('/getItems', async (req, res) => {
         return;
     }
 
+    // will need to change this if
     if (decoded.name === 'TokenExpiredError') {
         var token = signJWT(decoded.data);
         res.status(200).send({
