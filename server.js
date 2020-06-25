@@ -251,7 +251,63 @@ app.delete("/deleteItem", async (req, res) => {
             prettyPrintResponse(result);
         });
     }
-})
+});
+
+app.get('/friends', async (req, res) => {
+        let token = req.headers.authorization;
+        let decoded;
+
+        if (token.startsWith('Bearer')) {
+            token = token.replace('Bearer ', '')
+        }
+
+        try {
+            decoded = verifyUser(token);
+        } catch(err) {
+            console.log(err)
+            console.log(token)
+            console.log("Something wrong in get /friends")
+            res.sendStatus(500);
+            return;
+        }
+
+        // will need to change this if
+        if (decoded.name === 'TokenExpiredError') {
+            token = signJWT(decoded.data);
+            res.status(200).send({
+                jwt: token
+            });
+        }
+        else if (decoded.name === 'JsonWebTokenError') {
+            console.log('webtoken error')
+            res.status(403).send({ msg: decoded.message });
+        }
+        else {
+            // make sure that the user is in the db and their token is valid
+            if (await doesUserExist(decoded.data)) {
+                pgClient.query(`select u2."pkUser", u2."FirstName", u2."LastName"
+                                from users u1
+                                inner join friends f
+                                    on u1."pkUser" in (f."User2ID", f."User1ID")
+                                inner join users   u2
+                                    on  u2."pkUser" in (f."User2ID", f."User1ID")
+                                    and u1."pkUser" <> u2."pkUser"
+                                where u1."Email" = '${decoded.data}';`,
+                                (err, result) => {
+                                    if (err) {
+                                        console.error(err);
+                                        res.status(400).send(err);
+                                        return;
+                                    }
+                                    console.log(result)
+                                    res.status(200).send({ friends: result.rows });
+                                });
+            }
+            else {
+                res.status(403).send({ msg: "User does not exist" });
+            }
+        }
+    });
 
 
 app.listen(port, () => {
