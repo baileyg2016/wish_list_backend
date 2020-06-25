@@ -66,7 +66,7 @@ const doesUserExist = async (email) => {
     }
 */
 
-app.get("/", async (req, res, next) => {
+app.post("/", async (req, res, next) => {
     // should check for duplicates
 
     await pgClient.query(`SELECT checkLoginUser(\'${req.body.username}\', \'${req.body.password}\')`, (err, result) => {
@@ -76,7 +76,7 @@ app.get("/", async (req, res, next) => {
         }
 
         if (result.rows[0]) {
-
+            console.log(req.body)
             res.send({
                 jwt: signJWT(req.body.email)
             })
@@ -167,11 +167,17 @@ app.post("/addItem", async (req, res) => {
 
 app.get('/getItems', async (req, res) => {
     var token = req.headers.authorization;
+    console.log(req.headers)
     console.log(token)
+    if (token.startsWith('Bearer')) {
+        token = token.replace('Bearer ', '')
+    }
+    console.log(token)
+    console.log("here")
     var decoded;
     try {
         decoded = verifyUser(token);
-        console.log(decoded)
+        console.log("decoded: ", decoded)
     }
     catch {
         res.sendStatus(500);
@@ -186,6 +192,7 @@ app.get('/getItems', async (req, res) => {
         });
     }
     else if (decoded.name === 'JsonWebTokenError') {
+        console.log('webtoken error')
         res.status(403).send({ msg: decoded.message });
     }
     else {
@@ -206,7 +213,7 @@ app.get('/getItems', async (req, res) => {
                                     res.status(400).send(err);
                                     return;
                                 }
-
+                                console.log(result)
                                 res.status(200).send({ items: result.rows });
                             });
         }
