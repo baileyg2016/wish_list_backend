@@ -1,6 +1,7 @@
 server.go
 # dependencies
 /node_modules
+/userImages
 
 # keys
 *.pem
