@@ -285,7 +285,7 @@ app.get('/friends', async (req, res) => {
         else {
             // make sure that the user is in the db and their token is valid
             if (await doesUserExist(decoded.data)) {
-                pgClient.query(`select u2."pkUser", u2."FirstName", u2."LastName"
+                pgClient.query(`select u2."pkUser", u2."FirstName", u2."LastName", u2.image_path
                                 from users u1
                                 inner join friends f
                                     on u1."pkUser" in (f."User2ID", f."User1ID")
