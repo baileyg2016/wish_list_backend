@@ -3,6 +3,7 @@ require('dotenv').config();
 
 // make the JWT valid for a month
 const signJWT = (payload) => {
+    console.log(payload)
     return jwt.sign({
             data: payload
         }, process.env.JWT_PASS, { expiresIn: '30d' });
