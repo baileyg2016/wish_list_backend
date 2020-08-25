@@ -54,10 +54,6 @@ app.use(cors({origin: 'http://localhost:3000'}));
 //     });
 // }
 
-const doesUserExist = async (email) => {
-    return await pgClient.query(`SELECT doesUserExist(\'${email}\')`).then(res => { return res.rows[0].doesuserexist });
-}
-
 
 /* perform login credentials
     request body = {
@@ -71,18 +67,22 @@ const doesUserExist = async (email) => {
 const { PrismaClient } = require('@prisma/client');
 const { ApolloServer } = require('apollo-server-express');
 const typeDefs = require('./schema');
-const Query = require('./resolvers/Query')
+const Query = require('./resolvers/Query');
+const Mutation = require('./resolvers/Mutations')
 const prisma = new PrismaClient();
 
 const resolvers = {
-    Query
+    Query,
+    Mutation
 }
 
 const server = new ApolloServer({
     typeDefs,
     resolvers,
-    context: {
-        prisma
+    context: ({ req }) => {
+        const token = req.headers.authorization.slice(7)
+        console.log(token)
+        return { prisma, token }
     }
 })
 

@@ -1,10 +1,30 @@
 const { verifyUser } = require('../modules/jwt');
+const { doesUserExist } = require('../modules/helpers');
 
 const addItem = async (parent, args, { prisma }) => {
-    // const decode = verifyUser(args.token);
-    // return await prisma.items.create({
+    const decode = verifyUser(args.token);
+    if (!doesUserExist(prisma, args.Email)) {
+        return "User does not exist"
+    }
+    
+    const record = await prisma.items.create({
+        Name: args.Name,
+        url: args.url,
+        ImageURL: args.ImageURL,
+        Cost: args.Cost,
+        Size: args.Size,
+        user: {
+            connect: {
+                where: { Email: args.Email }
+            }
+        }
+    });
 
-    // })
+    console.log(record)
+
+    return {
+        id: record.pkItem
+    }
 };
 
 const register = async (parent, args, { prisma }) => {

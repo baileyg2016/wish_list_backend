@@ -1,7 +1,6 @@
 const { verifyUser, signJWT } = require("../modules/jwt");
 
 const login = async (parent, args, { prisma }) => {
-    
     try {
         const exists = await prisma.users.findMany({
             where: {
@@ -12,7 +11,7 @@ const login = async (parent, args, { prisma }) => {
 
         if (exists) {
             return {
-                jwt: await signJWT(args.Email),
+                jwt: signJWT(args.Email),
                 firstName: exists[0].FirstName,
                 lastName: exists[0].LastName,
                 image_path: exists[0].image_path
@@ -20,6 +19,7 @@ const login = async (parent, args, { prisma }) => {
         }
     }
     catch(err) {
+        console.error(err)
         return "500 Internal server error"  
     }
 };
@@ -53,19 +53,9 @@ const friends = async (parent, args, { prisma }) => {
                                     where u1."Email" = '${decoded.data}';`);
 };
 
-const doesUserExist = async(parent, args, { prisma }) => {
-    const user = await prisma.users.findOne({
-        where: {
-            Email: args.Email
-        }
-    });
-    return user ? true : false;
-};
-
 module.exports = {
     login,
     users,
     items,
-    friends,
-    doesUserExist
+    friends
 }
