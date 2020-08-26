@@ -4,7 +4,7 @@ const doesUserExist = async( prisma, email) => {
             Email: email
         }
     });
-    return user ? true : false;
+    return user ?? null;
 };
 
 module.exports = {

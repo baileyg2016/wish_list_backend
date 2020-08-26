@@ -80,8 +80,11 @@ const server = new ApolloServer({
     typeDefs,
     resolvers,
     context: ({ req }) => {
-        const token = req.headers.authorization.slice(7)
-        console.log(token)
+        let token = '';
+        if (!req.body.query.split('\n')[1].includes('register')) {
+            token = req.headers.authorization.slice(7)
+        }
+        
         return { prisma, token }
     }
 })

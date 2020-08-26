@@ -10,7 +10,7 @@ type Query {
 }
 
 type Mutation {
-    register(FirstName: String!, Lastname: String!, Email: String!, Password: String!): User!
+    register(FirstName: String!, LastName: String!, Email: String!, Password: String!): LoginReturned!
     addItem(Email: String, Name: String!, url: String!, ImageURL: String, Cost: Int, Size: String): ID!
 }
 
@@ -45,6 +45,12 @@ type LoginReturned {
     firstName: String
     lastName: String
     image_path: String
+}
+
+type RegisterReturned {
+    jwt: String!
+    firstName: String
+    lastName: String
 }
 
 type Token {
