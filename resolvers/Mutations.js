@@ -2,26 +2,28 @@ const { verifyUser, signJWT } = require('../modules/jwt');
 const { doesUserExist } = require('../modules/helpers');
 const { ApolloError } = require('apollo-server');
 
-const addItem = async (parent, args, { prisma }) => {
-    const decode = verifyUser(args.token);
-    if (!doesUserExist(prisma, args.Email)) {
+const addItem = async (parent, args, { prisma, token }) => {
+    const decode = verifyUser(token);
+    if (!doesUserExist(prisma, decode.data)) {
         return "User does not exist"
     }
+
+    console.log(decode)
     
     const record = await prisma.items.create({
-        Name: args.Name,
-        url: args.url,
-        ImageURL: args.ImageURL,
-        Cost: args.Cost,
-        Size: args.Size,
-        user: {
-            connect: {
-                where: { Email: args.Email }
+        data: {
+            Name: args.Name,
+            url: args.url,
+            ImageURL: args.ImageURL,
+            Cost: args.Cost,
+            Size: args.Size,
+            users: { // getting an error with this
+                connect: {
+                    where: { Email: decode.data }
+                }
             }
         }
     });
-
-    console.log(record)
 
     return {
         id: record.pkItem
@@ -55,7 +57,24 @@ const register = async (parent, args, { prisma }) => {
     }
 };
 
+const deleteItem = async (parent, args, { prisma }) => {
+    const decoded = verifyUser(args.token);
+    if (!decoded) {
+        return new AuthenticationError('User does not exist');
+    }
+
+    const success = prisma.items.deleteItem({
+        where: { pkUser: args.ItemId }
+    });
+
+    if (success) {
+        return true;
+    }
+    return false;
+};
+
 module.exports = {
     addItem,
     register,
+    deleteItem
 }

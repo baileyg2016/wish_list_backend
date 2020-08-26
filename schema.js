@@ -11,7 +11,8 @@ type Query {
 
 type Mutation {
     register(FirstName: String!, LastName: String!, Email: String!, Password: String!): LoginReturned!
-    addItem(Email: String, Name: String!, url: String!, ImageURL: String, Cost: Int, Size: String): ID!
+    addItem(Name: String!, url: String!, ImageURL: String, Cost: Int, Size: String): ID!
+    deleteItem(Token: String!, ItemId: Int!): Boolean!
 }
 
 type User {
@@ -51,10 +52,6 @@ type RegisterReturned {
     jwt: String!
     firstName: String
     lastName: String
-}
-
-type Token {
-    token: String!
 }
 `;
 
