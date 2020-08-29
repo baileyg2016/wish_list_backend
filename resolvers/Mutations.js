@@ -4,11 +4,9 @@ const { ApolloError } = require('apollo-server');
 
 const addItem = async (parent, args, { prisma, token }) => {
     const decode = verifyUser(token);
-    if (!doesUserExist(prisma, decode.data)) {
+    if (!doesUserExist(prisma, decode.data.email)) {
         return "User does not exist"
     }
-
-    console.log(decode)
     
     const record = await prisma.items.create({
         data: {
@@ -19,15 +17,13 @@ const addItem = async (parent, args, { prisma, token }) => {
             Size: args.Size,
             users: { // getting an error with this
                 connect: {
-                    where: { Email: decode.data }
+                    pkUser: decode.data.pk
                 }
             }
         }
     });
-
-    return {
-        id: record.pkItem
-    }
+    
+    return record.pkItem
 };
 
 const register = async (parent, args, { prisma }) => {
@@ -50,7 +46,7 @@ const register = async (parent, args, { prisma }) => {
     
     if (user) {
         return {
-            jwt: await signJWT(args.Email),
+            jwt: await signJWT({ email: args.Email, pk: user.pkUser }),
             firstName: args.FirstName,
             fastName: args.LastName,
         }

@@ -4,19 +4,19 @@ const typeDefs = gql`
 type Query {
     login(Email: String!, Password: String!): LoginReturned!
     users: [User!]!
-    items(token: String!): [Item!]!
+    items(token: String): [Item!]!
     friends(token: String!): [User!]!
     doesUserExist(token: String!): Boolean!
 }
 
 type Mutation {
     register(FirstName: String!, LastName: String!, Email: String!, Password: String!): LoginReturned!
-    addItem(Name: String!, url: String!, ImageURL: String, Cost: Int, Size: String): ID!
+    addItem(Name: String!, url: String!, ImageURL: String, Cost: Int, Size: String): String!
     deleteItem(Token: String!, ItemId: Int!): Boolean!
 }
 
 type User {
-    id: ID!
+    pkUser: Int!
     FirstName: String!
     LastName: String!
     Email: String!
@@ -26,7 +26,7 @@ type User {
 }
 
 type Item {
-    id: ID!
+    pkItem: Int!
     Name: String!
     url: String!
     ImageURL: String
@@ -36,7 +36,7 @@ type Item {
 }
 
 type Friend {
-    id: ID!
+    pkFriend: Int!
     User1ID: Int!
     User2ID: Int!
 }

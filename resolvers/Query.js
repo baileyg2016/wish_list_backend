@@ -1,6 +1,7 @@
 const { verifyUser, signJWT } = require("../modules/jwt");
-const { doesUserExists } = require("../modules/helpers");
+const { doesUserExist } = require("../modules/helpers");
 const { ApolloError, AuthenticationError } = require('apollo-server');
+const { JsonWebTokenError } = require("jsonwebtoken");
 
 const login = async (parent, args, { prisma }) => {
     try {
@@ -13,7 +14,7 @@ const login = async (parent, args, { prisma }) => {
 
         if (exists) {
             return {
-                jwt: signJWT(args.Email),
+                jwt: signJWT({ email: args.Email, pk: exists[0].pkUser }),
                 firstName: exists[0].FirstName,
                 lastName: exists[0].LastName,
                 image_path: exists[0].image_path
@@ -32,14 +33,14 @@ const users = async (parent, args, { prisma }) => {
     return await prisma.users.findMany();
 };
 
-const items = async (parent, args, { prisma }) => {
-    const decoded = verifyUser(args.token);
+const items = async (parent, args, { prisma, token }) => {
+    const decoded = verifyUser(token);
     if (!decoded) {
-        return new AuthenticationError('User does not exist');
+        return new JsonWebTokenError('Error with jwt');
     }
 
-    if(!doesUserExists(prisma, args.Email)) {
-        return 
+    if(!doesUserExist(prisma, decoded.data.email)) {
+        return new AuthenticationError('User does not exits')
     }
     
     try {
@@ -47,7 +48,7 @@ const items = async (parent, args, { prisma }) => {
             where: {
                 users: {
                     Email: {
-                        equals: decoded.data
+                        equals: decoded.data.email
                     }
                 }
             }
@@ -60,7 +61,11 @@ const items = async (parent, args, { prisma }) => {
 const friends = async (parent, args, { prisma }) => {
     const decoded = verifyUser(args.token);
     if (!decoded) {
-        return new AuthenticationError('User does not exist');
+        return new JsonWebTokenError('Error with jwt');
+    }
+
+    if(!doesUserExist(prisma, decoded.data.email)) {
+        return new AuthenticationError('User does not exits')
     }
 
     try {
