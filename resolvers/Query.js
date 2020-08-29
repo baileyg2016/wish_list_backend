@@ -33,7 +33,7 @@ const users = async (parent, args, { prisma }) => {
     return await prisma.users.findMany();
 };
 
-const items = async (parent, args, { prisma, token }) => {
+const getItems = async (parent, args, { prisma, token }) => {
     const decoded = verifyUser(token);
     if (!decoded) {
         return new JsonWebTokenError('Error with jwt');
@@ -58,18 +58,18 @@ const items = async (parent, args, { prisma, token }) => {
     }
 };
 
-const friends = async (parent, args, { prisma }) => {
-    const decoded = verifyUser(args.token);
+const friends = async (parent, args, { prisma, token }) => {
+    const decoded = verifyUser(token);
     if (!decoded) {
         return new JsonWebTokenError('Error with jwt');
     }
 
     if(!doesUserExist(prisma, decoded.data.email)) {
-        return new AuthenticationError('User does not exits')
+        return new AuthenticationError('User does not exits');
     }
 
     try {
-        return await prisma
+        const friends = await prisma
             .queryRaw(
                 `select 
                     u2."pkUser", u2."FirstName", 
@@ -80,7 +80,9 @@ const friends = async (parent, args, { prisma }) => {
                 inner join users   u2
                     on  u2."pkUser" in (f."User2ID", f."User1ID")
                     and u1."pkUser" <> u2."pkUser"
-                where u1."Email" = '${decoded.data}';`);
+                where u1."Email" = '${decoded.data.email}';`);
+
+        return friends;
     } catch(err) {
         return new ApolloError("error retrieving items", err);
     }
@@ -89,6 +91,6 @@ const friends = async (parent, args, { prisma }) => {
 module.exports = {
     login,
     users,
-    items,
+    getItems,
     friends
 }

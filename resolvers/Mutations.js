@@ -1,11 +1,16 @@
 const { verifyUser, signJWT } = require('../modules/jwt');
 const { doesUserExist } = require('../modules/helpers');
 const { ApolloError } = require('apollo-server');
+const { JsonWebTokenError } = require('jsonwebtoken');
 
 const addItem = async (parent, args, { prisma, token }) => {
-    const decode = verifyUser(token);
+    const decoded = verifyUser(token);
+    if (!decoded) {
+        return new JsonWebTokenError('Error decoding token');
+    }
+
     if (!doesUserExist(prisma, decode.data.email)) {
-        return "User does not exist"
+        return new AuthenticationError('User does not exits');
     }
     
     const record = await prisma.items.create({
@@ -53,24 +58,57 @@ const register = async (parent, args, { prisma }) => {
     }
 };
 
-const deleteItem = async (parent, args, { prisma }) => {
-    const decoded = verifyUser(args.token);
+const deleteItem = async (parent, args, { prisma, token }) => {
+    const decoded = verifyUser(token);
     if (!decoded) {
-        return new AuthenticationError('User does not exist');
+        return new JsonWebTokenError('Error decoding token');
     }
 
-    const success = prisma.items.deleteItem({
-        where: { pkUser: args.ItemId }
+    if (!doesUserExist(prisma, decoded.data.email)) {
+        return new AuthenticationError('User does not exits');
+    }
+
+    const success = await prisma.items.delete({
+        where: { pkItem: args.pkItem }
     });
 
-    if (success) {
-        return true;
+    if (!success) {
+        return false;
     }
-    return false;
+    return true;
+};
+
+const addFriend = async (parent, args, { prisma, token }) => {
+    const decoded = verifyUser(token);
+    if (!decoded) {
+        return new JsonWebTokenError('Error decoding token');
+    }
+
+    if (!doesUserExist(prisma, decoded.data.email)) {
+        return new AuthenticationError('User does not exits');
+    }
+
+    const friendship = await prisma.friends.create({
+        data: {
+            users_friends_User1IDTousers: {
+                connect: { pkUser: decoded.data.pk },
+            },
+            users_friends_User2IDTousers: {
+                connect: { pkUser: args.pkFriend },
+            },
+        }
+    });
+
+    if (!friendship) {
+        return false;
+    }
+    
+    return true;
 };
 
 module.exports = {
     addItem,
     register,
-    deleteItem
+    deleteItem,
+    addFriend
 }

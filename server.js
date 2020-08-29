@@ -81,6 +81,8 @@ const server = new ApolloServer({
     resolvers,
     context: ({ req }) => {
         let token = '';
+        // could create a potential error in the future but
+        // being optimistic
         if (!req.body.query.split('\n')[1].includes('register')) {
             token = req.headers.authorization.slice(7)
         }
