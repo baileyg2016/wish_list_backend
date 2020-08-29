@@ -9,7 +9,7 @@ const addItem = async (parent, args, { prisma, token }) => {
         return new JsonWebTokenError('Error decoding token');
     }
 
-    if (!doesUserExist(prisma, decode.data.email)) {
+    if (!doesUserExist(prisma, decoded.data.email)) {
         return new AuthenticationError('User does not exits');
     }
     
@@ -22,7 +22,7 @@ const addItem = async (parent, args, { prisma, token }) => {
             Size: args.Size,
             users: { // getting an error with this
                 connect: {
-                    pkUser: decode.data.pk
+                    pkUser: decoded.data.pk
                 }
             }
         }

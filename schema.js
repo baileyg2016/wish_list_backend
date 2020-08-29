@@ -11,7 +11,7 @@ type Query {
 
 type Mutation {
     register(FirstName: String!, LastName: String!, Email: String!, Password: String!): LoginReturned!
-    addItem(Name: String!, url: String!, ImageURL: String, Cost: Int, Size: String): String!
+    addItem(Name: String!, url: String!, ImageURL: String, Cost: Int, Size: String): Int!
     deleteItem(pkItem: Int!): Boolean!
     addFriend(pkFriend: Int!): Int!
     unFriend(pkFriend: Int!): Boolean!
