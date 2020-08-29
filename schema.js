@@ -13,7 +13,8 @@ type Mutation {
     register(FirstName: String!, LastName: String!, Email: String!, Password: String!): LoginReturned!
     addItem(Name: String!, url: String!, ImageURL: String, Cost: Int, Size: String): String!
     deleteItem(pkItem: Int!): Boolean!
-    addFriend(pkFriend: Int!): Boolean!
+    addFriend(pkFriend: Int!): Int!
+    unFriend(pkFriend: Int!): Boolean!
 }
 
 type User {

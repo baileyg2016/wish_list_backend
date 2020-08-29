@@ -100,6 +100,29 @@ const addFriend = async (parent, args, { prisma, token }) => {
     });
 
     if (!friendship) {
+        return new ApolloError('Houston we have a problem');
+    }
+    
+    return friendship.pkFriend;
+};
+
+const unFriend = async (parent, args, { prisma, token }) => {
+    const decoded = verifyUser(token);
+    if (!decoded) {
+        return new JsonWebTokenError('Error decoding token');
+    }
+
+    if (!doesUserExist(prisma, decoded.data.email)) {
+        return new AuthenticationError('User does not exits');
+    }
+
+    const sad = await prisma.friends.delete({
+        where: {
+            pkFriend: args.pkFriend
+        }
+    });
+
+    if (!sad) {
         return false;
     }
     
@@ -110,5 +133,6 @@ module.exports = {
     addItem,
     register,
     deleteItem,
-    addFriend
+    addFriend,
+    unFriend
 }
