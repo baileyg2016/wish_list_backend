@@ -4,19 +4,20 @@ const { ApolloError, AuthenticationError } = require('apollo-server');
 const { JsonWebTokenError } = require("jsonwebtoken");
 
 const login = async (parent, args, { prisma }) => {
+    console.log("login: ", args);
     try {
         const exists = await prisma.users.findMany({
             where: {
-                Email: args.Email,
-                Password: args.Password
+                email: args.email,
+                password: args.password
             }
         });
 
         if (exists) {
             return {
-                jwt: signJWT({ email: args.Email, pk: exists[0].pkUser }),
-                firstName: exists[0].FirstName,
-                lastName: exists[0].LastName,
+                jwt: signJWT({ email: args.email, pk: exists[0].pkUser }),
+                firstName: exists[0].firstName,
+                lastName: exists[0].lastName,
                 image_path: exists[0].image_path
             }
         } else {
@@ -34,6 +35,7 @@ const users = async (parent, args, { prisma }) => {
 };
 
 const getItems = async (parent, args, { prisma, token }) => {
+    console.log("items fetch")
     const decoded = verifyUser(token);
     if (!decoded) {
         return new JsonWebTokenError('Error with jwt');
@@ -47,7 +49,7 @@ const getItems = async (parent, args, { prisma, token }) => {
         return await prisma.items.findMany({
             where: {
                 users: {
-                    Email: {
+                    email: {
                         equals: decoded.data.email
                     }
                 }
@@ -59,11 +61,12 @@ const getItems = async (parent, args, { prisma, token }) => {
 };
 
 const friends = async (parent, args, { prisma, token }) => {
+    console.log("Friends request")
     const decoded = verifyUser(token);
     if (!decoded) {
         return new JsonWebTokenError('Error with jwt');
     }
-
+    console.log(decoded)
     if(!doesUserExist(prisma, decoded.data.email)) {
         return new AuthenticationError('User does not exits');
     }
@@ -72,16 +75,16 @@ const friends = async (parent, args, { prisma, token }) => {
         const friends = await prisma
             .queryRaw(
                 `select 
-                    u2."pkUser", u2."FirstName", 
-                    u2."LastName", u2.image_path
+                    u2."pkUser", u2."firstName", 
+                    u2."lastName", u2.image_path
                 from users u1
                 inner join friends f
-                    on u1."pkUser" in (f."User2ID", f."User1ID")
+                    on u1."pkUser" in (f."user2ID", f."user1ID")
                 inner join users   u2
-                    on  u2."pkUser" in (f."User2ID", f."User1ID")
+                    on  u2."pkUser" in (f."user2ID", f."user1ID")
                     and u1."pkUser" <> u2."pkUser"
-                where u1."Email" = '${decoded.data.email}';`);
-
+                where u1."email" = '${decoded.data.email}';`);
+        console.log(`Successful fetch`);
         return friends;
     } catch(err) {
         return new ApolloError("error retrieving items", err);

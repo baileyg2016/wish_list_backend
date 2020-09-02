@@ -2,16 +2,16 @@ const { gql } = require('apollo-server');
 
 const typeDefs = gql`
 type Query {
-    login(Email: String!, Password: String!): LoginReturned!
+    login(email: String!, password: String!): LoginReturned!
     users: [User!]!
-    getItems(token: String): [Item!]!
+    getItems: [Item!]!
     friends: [User!]!
     doesUserExist(token: String!): Boolean!
 }
 
 type Mutation {
-    register(FirstName: String!, LastName: String!, Email: String!, Password: String!): LoginReturned!
-    addItem(Name: String!, url: String!, ImageURL: String, Cost: Int, Size: String): Int!
+    register(firstName: String!, lastName: String!, email: String!, password: String!): LoginReturned!
+    addItem(name: String!, url: String!, imageURL: String, cost: Int, size: String): Int!
     deleteItem(pkItem: Int!): Boolean!
     addFriend(pkFriend: Int!): Int!
     unFriend(pkFriend: Int!): Boolean!
@@ -19,28 +19,28 @@ type Mutation {
 
 type User {
     pkUser: Int!
-    FirstName: String!
-    LastName: String!
-    Email: String!
-    Password: String!
+    firstName: String!
+    lastName: String!
+    email: String!
+    password: String!
     image_path: String
     token: String
 }
 
 type Item {
     pkItem: Int!
-    Name: String!
+    name: String!
     url: String!
-    ImageURL: String
-    Cost: Int
-    Size: String
-    UserID: ID!
+    imageURL: String
+    cost: Int
+    size: String
+    userID: ID!
 }
 
 type Friend {
     pkFriend: Int!
-    User1ID: Int!
-    User2ID: Int!
+    user1ID: Int!
+    user2ID: Int!
 }
 
 type LoginReturned {

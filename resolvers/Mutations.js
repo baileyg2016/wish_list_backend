@@ -13,13 +13,20 @@ const addItem = async (parent, args, { prisma, token }) => {
         return new AuthenticationError('User does not exits');
     }
     
+    let url = '';
+    if (!args.url.toString().startsWith('http')) {
+        url = `http://${args.url}`;
+    } else {
+        url = args.url
+    }
+
     const record = await prisma.items.create({
         data: {
-            Name: args.Name,
-            url: args.url,
-            ImageURL: args.ImageURL,
-            Cost: args.Cost,
-            Size: args.Size,
+            name: args.name,
+            url: url,
+            imageURL: args.imageURL,
+            cost: args.Cost,
+            size: args.Size,
             users: { // getting an error with this
                 connect: {
                     pkUser: decoded.data.pk
@@ -38,10 +45,10 @@ const register = async (parent, args, { prisma }) => {
         console.log(args)
         user = await prisma.users.create({
             data: {
-                FirstName: args.FirstName,
-                LastName: args.LastName,
-                Email: args.Email,
-                Password: args.Password
+                firstName: args.lirstName,
+                lastName: args.lastName,
+                email: args.email,
+                password: args.password
             }
         });
     } catch(err) {
@@ -51,9 +58,9 @@ const register = async (parent, args, { prisma }) => {
     
     if (user) {
         return {
-            jwt: await signJWT({ email: args.Email, pk: user.pkUser }),
-            firstName: args.FirstName,
-            fastName: args.LastName,
+            jwt: await signJWT({ email: args.email, pk: user.pkUser }),
+            firstName: args.firstName,
+            fastName: args.lastName,
         }
     }
 };
@@ -90,10 +97,10 @@ const addFriend = async (parent, args, { prisma, token }) => {
 
     const friendship = await prisma.friends.create({
         data: {
-            users_friends_User1IDTousers: {
+            users_friends_user1IDTousers: {
                 connect: { pkUser: decoded.data.pk },
             },
-            users_friends_User2IDTousers: {
+            users_friends_user2IDTousers: {
                 connect: { pkUser: args.pkFriend },
             },
         }
