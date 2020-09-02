@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource postgresql {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+model friends {
+  pkFriend                     Int   @default(autoincrement()) @id
+  user1ID                      Int
+  user2ID                      Int
+  users_friends_user1IDTousers users @relation("friends_user1IDTousers", fields: [user1ID], references: [pkUser])
+  users_friends_user2IDTousers users @relation("friends_user2IDTousers", fields: [user2ID], references: [pkUser])
+}
+
+model items {
+  pkItem   Int     @default(autoincrement()) @id
+  name     String?
+  url      String?
+  imageURL String?
+  cost     Float?
+  size     String?
+  custom   String?
+  userID   Int?
+  users    users?  @relation(fields: [userID], references: [pkUser])
+}
+
+model users {
+  pkUser                         Int       @default(autoincrement()) @id
+  firstName                      String?
+  lastName                       String?
+  email                          String?   @unique
+  password                       String?
+  image_path                     String?   @unique
+  friends_friends_user1IDTousers friends[] @relation("friends_user1IDTousers")
+  friends_friends_user2IDTousers friends[] @relation("friends_user2IDTousers")
+  items                          items[]
+}
