@@ -42,8 +42,11 @@ const searchUsersForNewFriends = async (parent, args, { prisma, token }) => {
     }
 
     try {
+        if (args.search === '') {
+            return []
+        }
         return await prisma.users.findMany({
-            where: { 
+            where: {
                 email: {
                     contains: args.search
                 }
