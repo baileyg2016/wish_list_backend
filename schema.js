@@ -3,7 +3,7 @@ const { gql } = require('apollo-server');
 const typeDefs = gql`
 type Query {
     login(email: String!, password: String!): LoginReturned!
-    users: [User!]!
+    searchUsersForNewFriends(search: String!): [User!]!
     getItems: [Item!]!
     friends: [User!]!
     doesUserExist(token: String!): Boolean!

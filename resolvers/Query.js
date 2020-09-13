@@ -30,8 +30,28 @@ const login = async (parent, args, { prisma }) => {
     }
 };
 
-const users = async (parent, args, { prisma }) => {
-    return await prisma.users.findMany();
+const searchUsersForNewFriends = async (parent, args, { prisma, token }) => {
+    console.log("searching for friend")
+    const decoded = verifyUser(token);
+    if (!decoded) {
+        return new JsonWebTokenError('Error with jwt');
+    }
+
+    if(!doesUserExist(prisma, decoded.data.email)) {
+        return new AuthenticationError('User does not exits')
+    }
+
+    try {
+        return await prisma.users.findMany({
+            where: { 
+                email: {
+                    contains: args.search
+                }
+            }
+        });
+    } catch (err) {
+        return new ApolloError("error searching to add new friends", err);
+    }
 };
 
 const getItems = async (parent, args, { prisma, token }) => {
@@ -93,7 +113,7 @@ const friends = async (parent, args, { prisma, token }) => {
 
 module.exports = {
     login,
-    users,
+    searchUsersForNewFriends,
     getItems,
-    friends
+    friends,
 }
