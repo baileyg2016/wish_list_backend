@@ -114,9 +114,39 @@ const friends = async (parent, args, { prisma, token }) => {
     }
 };
 
+const getFriendsWishList = async (parent, args, { prisma, token }) => {
+    console.log("Friends items fetch")
+    const decoded = verifyUser(token);
+    if (!decoded) {
+        return new JsonWebTokenError('Error with jwt');
+    }
+
+    if(!doesUserExist(prisma, decoded.data.email)) {
+        return new AuthenticationError('User does not exits')
+    }
+    console.log(args)
+    try {
+        
+        const items = await prisma.items.findMany({
+            where: {
+                users: {
+                    pkUser: {
+                        equals: args.pkFriend
+                    }
+                }
+            }
+        });
+        console.log(items)
+        return items
+    } catch (err) {
+        return new ApolloError("error retrieving items", err);
+    }
+};
+
 module.exports = {
     login,
     searchUsersForNewFriends,
     getItems,
     friends,
+    getFriendsWishList
 }

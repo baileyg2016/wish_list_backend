@@ -49,18 +49,18 @@ const server = new ApolloServer({
     resolvers,
     context: ({ req }) => {
         console.log('request made')
-        console.log(req.body.query)
-        console.log(req.headers.authorization)
+        // console.log(req.body.query)
+        // console.log(req.headers.authorization)
         let token = '';
         // could create a potential error in the future but
         // being optimistic
         if (!req.body.query.split('\n')[1].includes('register')
             || !req.body.query.split('\n')[1].includes('login')) {
-            console.log('got token')
+            // console.log('got token')
             token = req.headers.authorization.slice(7)
         }
         
-        console.log(token)
+        // console.log(token)
         return { prisma, token }
     }
 })

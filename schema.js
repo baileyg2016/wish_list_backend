@@ -7,6 +7,7 @@ type Query {
     getItems: [Item!]!
     friends: [User!]!
     doesUserExist(token: String!): Boolean!
+    getFriendsWishList(pkFriend: Int!): [Item]!
 }
 
 type Mutation {

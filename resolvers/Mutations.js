@@ -42,7 +42,6 @@ const register = async (parent, args, { prisma }) => {
     // need to add bcrypt either here or the client
     let user;
     try {
-        console.log(args)
         user = await prisma.users.create({
             data: {
                 firstName: args.lirstName,
@@ -105,7 +104,7 @@ const addFriend = async (parent, args, { prisma, token }) => {
             },
         }
     });
-
+    console.log(friendship)
     if (!friendship) {
         return new ApolloError('Houston we have a problem');
     }
