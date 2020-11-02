@@ -2,6 +2,7 @@ const { verifyUser, signJWT } = require("../modules/jwt");
 const { doesUserExist } = require("../modules/helpers");
 const { ApolloError, AuthenticationError } = require('apollo-server');
 const { JsonWebTokenError } = require("jsonwebtoken");
+const { isCompositeType } = require("graphql");
 
 const login = async (parent, args, { prisma }) => {
     console.log("login: ", args);
@@ -12,7 +13,7 @@ const login = async (parent, args, { prisma }) => {
                 password: args.password
             }
         });
-
+        console.log(exists)
         if (exists) {
             return {
                 jwt: signJWT({ email: args.email, pk: exists[0].pkUser }),
@@ -59,7 +60,9 @@ const searchUsersForNewFriends = async (parent, args, { prisma, token }) => {
 
 const getItems = async (parent, args, { prisma, token }) => {
     console.log("items fetch")
+    console.log(token)
     const decoded = verifyUser(token);
+    console.log('correctly verified the user')
     if (!decoded) {
         return new JsonWebTokenError('Error with jwt');
     }
@@ -79,6 +82,7 @@ const getItems = async (parent, args, { prisma, token }) => {
             }
         });
     } catch (err) {
+        console.error(`Error in getItems: ${err}`)
         return new ApolloError("error retrieving items", err);
     }
 };
